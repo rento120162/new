@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>septentrio_gnss_driver</name>
+  <version>1.4.6</version>
+  <description>ROSaic: C++ driver for Septentrio's GNSS and INS receivers</description>
+
+  <!-- Maintainers -->
+  <maintainer email="tibor.doeme@alumni.ethz.ch">Tibor Dome</maintainer>
+  <maintainer email="thomas.emter@iosb.fraunhofer.de">Thomas Emter</maintainer>
+  <maintainer email="githubuser@septentrio.com">Septentrio</maintainer>
+
+
+  <!-- License -->
+  <license>BSD 3-Clause License</license>
+
+
+  <!-- Websites -->
+  <url type="website">https://github.com/septentrio-gnss/septentrio_gnss_driver</url>
+  <url type="website">https://www.ros.org/wiki/septentrio_gnss_driver</url>
+
+  <!-- Authors -->
+  <author>Tibor Dome</author>
+  <author>Thomas Emter</author>
+
+  <!-- Dependencies-->
+  <build_depend>ros_environment</build_depend>
+
+  <buildtool_depend condition="$ROS_VERSION == 2">ament_cmake</buildtool_depend>
+  <build_depend condition="$ROS_VERSION == 2">rosidl_default_generators</build_depend>
+  <exec_depend condition="$ROS_VERSION == 2">rosidl_default_runtime</exec_depend>
+  <member_of_group condition="$ROS_VERSION == 2">rosidl_interface_packages</member_of_group>
+  <depend condition="$ROS_VERSION == 2">rclcpp</depend>
+  <depend condition="$ROS_VERSION == 2">rclcpp_components</depend>
+  <depend condition="$ROS_VERSION == 2">ament_cmake_ros</depend>
+  <depend condition="$ROS_VERSION == 2">gtest_vendor</depend>
+
+  <buildtool_depend condition="$ROS_VERSION == 1">catkin</buildtool_depend>
+  <build_depend condition="$ROS_VERSION == 1">message_generation</build_depend>
+  <depend condition="$ROS_VERSION == 1">roscpp</depend>
+  <exec_depend condition="$ROS_VERSION == 1">message_runtime</exec_depend>
+  
+  <depend>diagnostic_msgs</depend>
+  <depend>nmea_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend condition="$ROS_VERSION == 2">gps_msgs</depend>
+  <depend condition="$ROS_VERSION == 1">gps_common</depend>
+  <depend>nav_msgs</depend>
+  <depend>boost</depend>
+  <depend>libpcap</depend>  
+  <depend>geographiclib</depend>
+  <depend>tf2</depend>
+  <depend>tf2_eigen</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>tf2_ros</depend>
+  <export>
+    <build_type condition="$ROS_VERSION == 1">catkin</build_type>
+    <build_type condition="$ROS_VERSION == 2">ament_cmake</build_type>
+  </export>
+</package>
