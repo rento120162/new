@@ -13,9 +13,10 @@ os.environ['RCUTILS_CONSOLE_OUTPUT_FORMAT'] = '{time}: [{name}] [{severity}]\t{m
 
 def generate_launch_description():
     package_path = get_package_share_directory('septentrio_gnss_driver')
+    default_config_path = os.path.join(package_path, 'config')
     config_path = LaunchConfiguration('config_path')
     config_file = LaunchConfiguration('config_file')
-    default_config_path = os.path.join(package_path, 'config')
+    
 
     declare_config_path_cmd = DeclareLaunchArgument(
         'config_path', default_value=default_config_path,
@@ -31,6 +32,7 @@ def generate_launch_description():
         package='septentrio_gnss_driver', 
         plugin='rosaic_node::ROSaicNode',
         parameters=[PathJoinSubstitution([config_path, config_file])]
+    )
 
     container = ComposableNodeContainer(
         name='septentrio_gnss_driver_container',
@@ -42,4 +44,8 @@ def generate_launch_description():
         output='screen'
     )
 
-    return LaunchDescription([container])
+    return LaunchDescription([
+        declare_config_path_cmd,
+        declare_config_file_cmd,
+        container
+    ])
