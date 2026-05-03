@@ -167,13 +167,13 @@ ekf_filter_node_map:
 
 navsat_transform_node:
   ros__parameters:
-    frequency: 5.0
+    frequency: 30.0
     delay: 1.0
     magnetic_declination_radians: 0.0
     yaw_offset: 0.0
-    gpsCovThreshold: 2.0
+    #gpsCovThreshold: 2.0
     zero_altitude: true
-    broadcast_cartesian_transform: true
+    broadcast_cartesian_transform: false
     publish_filtered_gps: true
     use_odometry_yaw: true
-    wait_for_datum: true
+    wait_for_datum: false

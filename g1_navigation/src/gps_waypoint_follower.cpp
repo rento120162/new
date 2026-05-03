@@ -143,8 +143,8 @@ private:
         geometry_msgs::msg::PoseStamped goal_pose;
         goal_pose.header.frame_id = "map";
         goal_pose.header.stamp = now();
-        goal_pose.pose.position.x = response->map_point.x;
-        goal_pose.pose.position.y = response->map_point.y;
+        goal_pose.pose.position.x = -(response->map_point.x);
+        goal_pose.pose.position.y = -(response->map_point.y);
         goal_pose.pose.position.z = 0.0;
         // yaw不要
         goal_pose.pose.orientation.w = 1.0;
