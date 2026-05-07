@@ -88,7 +88,7 @@ controller_server:
     # Progress checker parameters
     progress_checker:
       plugin: "nav2_controller::SimpleProgressChecker"
-      required_movement_radius: 0.2
+      required_movement_radius: 0.05
       movement_time_allowance: 20.0
     # Goal checker parameters
     #precise_goal_checker:
@@ -99,148 +99,129 @@ controller_server:
     general_goal_checker:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.4
-      yaw_goal_tolerance: 0.5
+      xy_goal_tolerance: 1.5
+      yaw_goal_tolerance: 3.14
     # DWB parameters
     FollowPath:
       plugin: "dwb_core::DWBLocalPlanner"
       debug_trajectory_details: True
-      min_vel_x: 0.05
+      min_vel_x: 0.0
       min_vel_y: 0.0
-      max_vel_x: 0.5
+      max_vel_x: 6.0
       max_vel_y: 0.0
-      max_vel_theta: 1.0
-      min_speed_xy: 0.05
-      max_speed_xy: 0.5
+      max_vel_theta: 4.0
+      min_speed_xy: 0.00
+      max_speed_xy: 6.0
       min_speed_theta: 0.0
       # Add high threshold velocity for turtlebot 3 issue.
       # https://github.com/ROBOTIS-GIT/turtlebot3_simulations/issues/75
-      acc_lim_x: 2.5
+      acc_lim_x: 5.0
       acc_lim_y: 0.0
-      acc_lim_theta: 3.2
-      decel_lim_x: -2.5
+      acc_lim_theta: 5.2
+      decel_lim_x: -6.0
       decel_lim_y: 0.0
-      decel_lim_theta: -3.2
-      vx_samples: 15
+      decel_lim_theta: -5.2
+      vx_samples: 20
       vy_samples: 5
       vtheta_samples: 15
-      sim_time: 1.2
+      sim_time: 2.0
       linear_granularity: 0.05
       angular_granularity: 0.025
       transform_tolerance: 0.5
-      xy_goal_tolerance: 0.35
-      trans_stopped_velocity: 0.05
+      xy_goal_tolerance: 1.5
+      trans_stopped_velocity: 0.02
       short_circuit_trajectory_evaluation: True
       stateful: True
       critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
-      BaseObstacle.scale: 0.02
+      BaseObstacle.scale: 0.2
       PathAlign.scale: 6.0
       PathAlign.forward_point_distance: 0.1
       GoalAlign.scale: 4.0
       GoalAlign.forward_point_distance: 0.1
       PathDist.scale: 24.0
       GoalDist.scale: 16.0
-      RotateToGoal.scale: 4.0
-      RotateToGoal.slowing_factor: 2.0
+      RotateToGoal.scale: 0.5
+      RotateToGoal.slowing_factor: 1.0
       RotateToGoal.lookahead_time: -1.0
 
 # GPS WPF CHANGE: Remove static layer
 local_costmap:
   local_costmap:
     ros__parameters:
-      update_frequency: 3.0
-      publish_frequency: 2.0
-      global_frame: odom
+      update_frequency: 5.0
+      publish_frequency: 4.0
+      global_frame: base_link
       robot_base_frame: base_link
       use_sim_time: False
       rolling_window: True
       width: 10
       height: 10
       resolution: 0.1
-      robot_radius: 0.22
+      robot_radius: 1.0
       plugins: ["obstacle_layer", "inflation_layer"]
-      inflation_layer:
-        plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 2.0
-        inflation_radius: 0.3
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: True
+        enabled: true
         observation_sources: laserscan
         laserscan:
           topic: /obstacle_scan
           data_type: "LaserScan"
-          clearing: True
-          marking: True
-          inf_is_valid: True
-          raytrace_max_range: 10.0
-          raytrace_min_range: 0.1
-          obstacle_max_range: 10.0
-          obstacle_min_range: 0.1
+          clearing: true
+          marking: true
+          inf_is_valid: true
+          raytrace_max_range: 20.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 6.0
+          obstacle_min_range: 0.2
           max_obstacle_height: 2.0
-      
-     # voxel_layer:
-     #   plugin: "nav2_costmap_2d::VoxelLayer"
-     #   enabled: True
-     #   publish_voxel_map: True
-     #   origin_z: -0.5
-     #   z_resolution: 0.1
-     #   z_voxels: 10
-     #   max_obstacle_height: 2.0
-     #   mark_threshold: 3
-     #   observation_sources: laserscan
-     #   laserscan:
-     #     topic: /obstacle_cloud
-     #     max_obstacle_height: 2.0
-     #     clearing: True
-     #     marking: True
-     #     data_type: "LaserScan"
-     #     raytrace_max_range: 10.0
-     #     raytrace_min_range: 0.1
-     #     obstacle_max_range: 10.0
-     #     obstacle_min_range: 0.0
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        cost_scaling_factor: 3.0
+        inflation_radius: 1.0
       always_send_full_costmap: True
 
 # GPS WPF CHANGE: Remove static layer
 global_costmap:
   global_costmap:
     ros__parameters:
-      update_frequency: 1.0
-      publish_frequency: 1.0
+      update_frequency: 5.0
+      publish_frequency: 4.0
       global_frame: map
       robot_base_frame: base_link
-      robot_radius: 0.22
+      robot_radius: 1.0
       resolution: 0.1
       # When using GPS navigation you will potentially traverse huge environments which are not practical to
       # fit on a big static costmap. Thus it is recommended to use a rolling global costmap large enough to 
       # contain each pair of successive waypoints. See: https://github.com/ros-planning/navigation2/issues/2174
-      rolling_window: True
-      width: 20
-      height: 20
+      rolling_window: true
+      use_sim_time: False
+      width: 100
+      height: 100
       # origin_x: 0.0
       # origin_y: 0.0
-      track_unknown_space: False
+      track_unknown_space: false
       # no static map
       plugins: ["obstacle_layer", "inflation_layer"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: True
+        enabled: true
         observation_sources: laserscan
         laserscan:
-          topic: /obstacle_cloud
+          topic: /obstacle_scan
           max_obstacle_height: 2.0
-          clearing: True
-          marking: True
+          clearing: true
+          marking: true
           data_type: "LaserScan"
-          raytrace_max_range: 10.0
+          raytrace_max_range: 20.0
           raytrace_min_range: 0.0
-          obstacle_max_range: 8.0
-          obstacle_min_range: 0.5
-          inf_is_valid: True
+          obstacle_max_range: 6.0
+          obstacle_min_range: 0.2
+          max_obstacle_height: 2.0
+          inf_is_valid: true
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 3.0
-        inflation_radius: 0.55
+        cost_scaling_factor: 5.0
+        inflation_radius: 1.5
       always_send_full_costmap: True
 
 # The yaml_filename does not need to be specified since it going to be set by defaults in launch.
@@ -314,9 +295,9 @@ behavior_server:
     robot_base_frame: base_link
     transform_tolerance: 0.5
     simulate_ahead_time: 2.0
-    max_rotational_vel: 1.0
-    min_rotational_vel: 0.4
-    rotational_acc_lim: 3.2
+    max_rotational_vel: 3.0
+    min_rotational_vel: 0.2
+    rotational_acc_lim: 4.0
 
 robot_state_publisher:
   ros__parameters:
@@ -332,7 +313,7 @@ waypoint_follower:
     wait_at_waypoint:
       plugin: "nav2_waypoint_follower::WaitAtWaypoint"
       enabled: True
-      waypoint_pause_duration: 200
+      waypoint_pause_duration: 100
 
 velocity_smoother:
   ros__parameters:
@@ -340,10 +321,10 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [0.26, 0.0, 1.0]
-    min_velocity: [-0.26, 0.0, -1.0]
-    max_accel: [2.5, 0.0, 3.2]
-    max_decel: [-2.5, 0.0, -3.2]
+    max_velocity: [6.0, 0.0, 5.0]
+    min_velocity: [-6.0, 0.0, -5.0]
+    max_accel: [5.0, 0.0, 5.2]
+    max_decel: [-5.0, 0.0, -5.2]
     odom_topic: "odom"
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]

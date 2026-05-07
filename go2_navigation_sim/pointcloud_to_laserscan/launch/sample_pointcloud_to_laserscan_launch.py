@@ -31,12 +31,12 @@ def generate_launch_description():
         Node(
             package='pointcloud_to_laserscan', executable='pointcloud_to_laserscan_node',
             remappings=[('cloud_in', '/livox/lidar'),
-                        ('scan', '/Laser_map_scan')],
+                        ('scan', '/obstacle_scan')],
             parameters=[{
                 'target_frame': 'odom',
                 'queue_size' : 50,
                 'transform_tolerance': 0.01,
-                'min_height': -1.0,
+                'min_height': -0.1,
                 'max_height': 1.0,
                 'angle_min': -3.14159,  # -M_PI/2
                 'angle_max': 3.14159,  # M_PI/2

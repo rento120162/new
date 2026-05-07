@@ -1,204 +1,164 @@
-// gps_waypoint_follower.cpp
-//
-// Humble対応:
-// GPS(lat/lon) waypoint → map座標変換 → NavigateToPose送信
-//
-// 追加機能:
-// - waypointごとに attribute を設定可能
-// - 到達時に topic publish
-// - yaw不要（進行方向はNav2任せ）
-//
-// YAML例:
-//
-// waypoints:
-//   - latitude: 38.4239
-//     longitude: 110.7852
-//     attribute: "spray_on"
-//
-//   - latitude: 38.4241
-//     longitude: 110.7855
-//     attribute: "take_photo"
-//
-// publish topic:
-//   /waypoint_attribute   std_msgs/String
-//
-// --------------------------------------------
+// gps_waypoint_to_follow_waypoints.cpp
 
 #include <chrono>
-#include <fstream>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/string.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "robot_localization/srv/from_ll.hpp"
-#include "nav2_msgs/action/navigate_to_pose.hpp"
+#include "nav2_msgs/action/follow_waypoints.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "yaml-cpp/yaml.h"
 
 using namespace std::chrono_literals;
 
-class GPSWaypointFollower : public rclcpp::Node
+class GPSWaypointSender : public rclcpp::Node
 {
 public:
+    using FollowWaypoints = nav2_msgs::action::FollowWaypoints;
 
-    using NavigateToPose = nav2_msgs::action::NavigateToPose;
-    using GoalHandleNavigateToPose = rclcpp_action::ClientGoalHandle<NavigateToPose>;
-
-    struct Waypoint
-    {
-        double latitude;
-        double longitude;
-        std::string attribute;
+    struct Waypoint {
+        double lat;
+        double lon;
     };
 
-    GPSWaypointFollower(const std::string & yaml_path) : Node("gps_waypoint_follower")
+    GPSWaypointSender(const std::string & yaml_path)
+        : Node("gps_waypoint_sender")
     {
-        loadWaypoints(yaml_path);
+        loadYaml(yaml_path);
 
-        attribute_pub_ = this->create_publisher<std_msgs::msg::String>("/waypoint_attribute", 10);
-        fromll_client_ = this->create_client<robot_localization::srv::FromLL>("/fromLL");
-        nav_client_ = rclcpp_action::create_client<NavigateToPose>(this, "navigate_to_pose");
+        fromll_client_ =
+            this->create_client<robot_localization::srv::FromLL>("/fromLL");
+
+        action_client_ =
+            rclcpp_action::create_client<FollowWaypoints>(this, "follow_waypoints");
 
         waitForServices();
-        current_index_ = 0;
-        sendNextWaypoint();
+
+        convertAll();
     }
 
 private:
+    std::vector<Waypoint> gps_wps_;
+    std::vector<geometry_msgs::msg::PoseStamped> map_wps_;
 
-    std::vector<Waypoint> waypoints_;
+    rclcpp::Client<robot_localization::srv::FromLL>::SharedPtr fromll_client_;
+    rclcpp_action::Client<FollowWaypoints>::SharedPtr action_client_;
 
-    size_t current_index_;
+    size_t convert_index_ = 0;
 
-    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr attribute_pub_;
+    void loadYaml(const std::string & path)
+    {
+        YAML::Node config = YAML::LoadFile(path);
 
-    rclcpp::Client<robot_localization::srv::FromLL>::SharedPtr
-        fromll_client_;
+        for (auto wp : config["waypoints"]) {
+            gps_wps_.push_back({
+                wp["latitude"].as<double>(),
+                wp["longitude"].as<double>()
+            });
+        }
 
-    rclcpp_action::Client<NavigateToPose>::SharedPtr nav_client_;
+        RCLCPP_INFO(get_logger(), "Loaded %ld GPS waypoints", gps_wps_.size());
+    }
 
     void waitForServices()
     {
-        while (!fromll_client_->wait_for_service(1s))
-        {
-            RCLCPP_INFO(get_logger(), "Waiting for /fromLL service...");
+        while (!fromll_client_->wait_for_service(1s)) {
+            RCLCPP_INFO(get_logger(), "Waiting for /fromLL...");
         }
 
-        while (!nav_client_->wait_for_action_server(1s))
-        {
-            RCLCPP_INFO( get_logger(), "Waiting for navigate_to_pose...");
+        while (!action_client_->wait_for_action_server(1s)) {
+            RCLCPP_INFO(get_logger(), "Waiting for follow_waypoints...");
         }
     }
 
-    void loadWaypoints(const std::string & yaml_path)
+    void convertAll()
     {
-        YAML::Node config = YAML::LoadFile(yaml_path);
-
-        auto wps = config["waypoints"];
-        for (auto wp : wps)
-        {
-            Waypoint w;
-            w.latitude = wp["latitude"].as<double>();
-            w.longitude = wp["longitude"].as<double>();
-            if (wp["attribute"])
-                w.attribute = wp["attribute"].as<std::string>();
-            else
-                w.attribute = "";
-
-            waypoints_.push_back(w);
-        }
-
-        RCLCPP_INFO( get_logger(), "Loaded %ld waypoints", waypoints_.size());
+        convert_index_ = 0;
+        requestNext();
     }
 
-    void sendNextWaypoint()
+    void requestNext()
     {
-        if (current_index_ >= waypoints_.size())
-        {
-            RCLCPP_INFO( get_logger(), "All waypoints completed");
+        if (convert_index_ >= gps_wps_.size()) {
+            sendGoal();
             return;
         }
 
-        auto & wp = waypoints_[current_index_];
+        auto & wp = gps_wps_[convert_index_];
 
-        RCLCPP_INFO( get_logger(), "Converting GPS waypoint %ld", current_index_);
+        auto req = std::make_shared<robot_localization::srv::FromLL::Request>();
+        req->ll_point.latitude = wp.lat;
+        req->ll_point.longitude = wp.lon;
+        req->ll_point.altitude = 0.0;
 
-        auto request = std::make_shared<robot_localization::srv::FromLL::Request>();
-        request->ll_point.latitude = wp.latitude;
-        request->ll_point.longitude = wp.longitude;
-        request->ll_point.altitude = 0.0;
-
-        auto future = fromll_client_->async_send_request(request, [this](rclcpp::Client<robot_localization::srv::FromLL>::SharedFuture result)
-                {
-                    handleFromLL(result);
-                });
+        fromll_client_->async_send_request(
+            req,
+            std::bind(&GPSWaypointSender::fromLLCallback, this, std::placeholders::_1));
     }
 
-    void handleFromLL(rclcpp::Client<robot_localization::srv::FromLL>::SharedFuture future)
+    void fromLLCallback(
+        rclcpp::Client<robot_localization::srv::FromLL>::SharedFuture future)
     {
-        auto response = future.get();
-        geometry_msgs::msg::PoseStamped goal_pose;
-        goal_pose.header.frame_id = "map";
-        goal_pose.header.stamp = now();
-        goal_pose.pose.position.x = -(response->map_point.x);
-        goal_pose.pose.position.y = -(response->map_point.y);
-        goal_pose.pose.position.z = 0.0;
-        // yaw不要
-        goal_pose.pose.orientation.w = 1.0;
+        auto res = future.get();
 
-        RCLCPP_INFO(get_logger(), "Sending goal x=%.2f y=%.2f", goal_pose.pose.position.x, goal_pose.pose.position.y);
+        geometry_msgs::msg::PoseStamped pose;
+        pose.header.frame_id = "map";
+        pose.header.stamp = now();
 
-        NavigateToPose::Goal goal_msg;
-        goal_msg.pose = goal_pose;
-        auto options = rclcpp_action::Client<NavigateToPose>::SendGoalOptions();
+        // ←ここは環境依存（反転してるなら残す）
+        pose.pose.position.x = -(res->map_point.y);
+        pose.pose.position.y = -(res->map_point.x);
+        pose.pose.orientation.w = 1.0;
 
-        options.result_callback = std::bind(&GPSWaypointFollower::resultCallback, this, std::placeholders::_1);
-        nav_client_->async_send_goal(goal_msg, options);
+        map_wps_.push_back(pose);
+
+        RCLCPP_INFO(get_logger(), "Converted %ld", convert_index_);
+
+        convert_index_++;
+        requestNext();
     }
 
-    void resultCallback(const GoalHandleNavigateToPose::WrappedResult & result)
+    void sendGoal()
     {
-        if (result.code == rclcpp_action::ResultCode::SUCCEEDED)
-        {
-            auto & wp = waypoints_[current_index_];
-            RCLCPP_INFO(get_logger(), "Waypoint %ld reached", current_index_);
+        RCLCPP_INFO(get_logger(), "Sending %ld waypoints", map_wps_.size());
 
-            if (!wp.attribute.empty())
-            {
-                std_msgs::msg::String msg;
-                msg.data = wp.attribute;
-                attribute_pub_->publish(msg);
-                RCLCPP_INFO(get_logger(), "Published attribute: %s", wp.attribute.c_str());
-            }
+        for (size_t i = 0; i < map_wps_.size(); i++) {
+            auto & p = map_wps_[i].pose.position;
+            RCLCPP_INFO(get_logger(),
+                "WP[%ld]: x=%.3f y=%.3f",
+                i, p.x, p.y);
+        }
 
-            current_index_++;
-            rclcpp::sleep_for(1s);
-            sendNextWaypoint();
-        }
-        else
-        {
-            RCLCPP_ERROR(get_logger(), "Navigation failed");
-        }
+        FollowWaypoints::Goal goal_msg;
+        goal_msg.poses = map_wps_;
+
+        auto options =
+            rclcpp_action::Client<FollowWaypoints>::SendGoalOptions();
+
+        options.feedback_callback =
+            [](auto, auto feedback) {
+                RCLCPP_INFO(rclcpp::get_logger("feedback"),
+                            "Current WP: %d",
+                            feedback->current_waypoint);
+            };
+
+        action_client_->async_send_goal(goal_msg, options);
     }
 };
 
 int main(int argc, char ** argv)
 {
     rclcpp::init(argc, argv);
-    if (argc < 2)
-    {
-        std::cout
-            << "Usage:\n"
-            << "gps_waypoint_follower waypoints.yaml\n";
 
+    if (argc < 2) {
+        std::cout << "usage: node waypoints.yaml\n";
         return 1;
     }
 
-    auto node = std::make_shared<GPSWaypointFollower>(argv[1]);
+    auto node = std::make_shared<GPSWaypointSender>(argv[1]);
     rclcpp::spin(node);
     rclcpp::shutdown();
-    return 0;
 }

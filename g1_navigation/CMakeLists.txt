@@ -29,6 +29,7 @@ set (
   robot_localization
   sensor_msgs
   geographic_msgs
+  tf2_geometry_msgs
 )
 
 # find dependencies
@@ -42,6 +43,7 @@ find_package(yaml-cpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geographic_msgs REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 
 add_executable(ros2serial src/ros2serial.cpp)
 ament_target_dependencies(ros2serial ${DEPENDENCY_LIST})

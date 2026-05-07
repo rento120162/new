@@ -56,10 +56,10 @@ private:
     {
         if (!emergency_flag_) {
             
-            RCLCPP_INFO(this->get_logger(), "Received cmd_vel: LinearX=%f, LinearY=%f, AngularZ=%f",
-                        cmd_vel_msg->linear.x, cmd_vel_msg->linear.y, cmd_vel_msg->angular.z);
+            //RCLCPP_INFO(this->get_logger(), "Received cmd_vel: LinearX=%f, LinearY=%f, AngularZ=%f",
+            //            cmd_vel_msg->linear.x, cmd_vel_msg->linear.y, cmd_vel_msg->angular.z);
 
-            client_.Move(cmd_vel_msg->linear.x, cmd_vel_msg->linear.y, -(cmd_vel_msg->angular.z));
+            client_.Move((cmd_vel_msg->linear.x), cmd_vel_msg->linear.y, -(cmd_vel_msg->angular.z));
         } else {
             client_.BalanceStand();
         }
