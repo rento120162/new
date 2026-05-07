@@ -33,14 +33,6 @@ def generate_launch_description():
         launch.actions.DeclareLaunchArgument(
             'output_location',
 	        default_value='~/dual_ekf_navsat_example_debug.txt'),
-        
-        launch_ros.actions.Node(
-            package='tf2_ros',
-            executable='static_transform_publisher',
-            name='static_transform_publisher',
-            output='screen',
-            arguments=['0', '0', '0', '0', '0', '0', 'map', 'camera_init']
-        ),
 	
         launch_ros.actions.Node(
             package='robot_localization', 
@@ -60,7 +52,7 @@ def generate_launch_description():
             parameters=[rl_params_file, {"use_sim_time": False}],
             remappings=[('imu/data', '/imu/data'),
                         ('odometry/local', '/Odometry'),
-                        ('odometry/gps', '/odometry/gps'),
+                        ('odometry/gps', '/odometry/gps_filtered'),
                         ('odometry/filtered', '/odometry/global')]
         ),           
         launch_ros.actions.Node(

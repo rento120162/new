@@ -16,7 +16,7 @@ def generate_launch_description():
             output='screen',
             parameters=[{
                 'target_frame': 'livox_frame',
-                'input_topic': '/livox/lidar',
+                'input_topic': '/livox_lidar_fixed',
                 'output_topic': '/obstacle_cloud', # pointcloud_to_laserscanに入力
                 'ground_remove_algorithm': 'NORMAL',
                 'voxel_leaf_size': 0.1,

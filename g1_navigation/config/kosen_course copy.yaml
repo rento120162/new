@@ -1,5 +1,23 @@
 #校内コース
 waypoints:
+- latitude: 34.680075
+  longitude: 135.0676944
+  yaw: 0.0
+- latitude: 34.68011389
+  longitude: 135.06785
+  yaw: 0.0
+- latitude: 34.67996944
+  longitude: 135.0679389
+  yaw: 0.0
+- latitude: 34.67977222
+  longitude: 135.0680472
+  yaw: 0.0
+- latitude: 34.67964444
+  longitude: 135.0681111
+  yaw: 0.0
+- latitude: 34.67950278
+  longitude: 135.0681639
+  yaw: 0.0
 - latitude: 34.67933889
   longitude: 135.0682278
   yaw: 0.0

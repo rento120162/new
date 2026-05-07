@@ -99,7 +99,7 @@ controller_server:
     general_goal_checker:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 1.5
+      xy_goal_tolerance: 3.0
       yaw_goal_tolerance: 3.14
     # DWB parameters
     FollowPath:
@@ -128,7 +128,7 @@ controller_server:
       linear_granularity: 0.05
       angular_granularity: 0.025
       transform_tolerance: 0.5
-      xy_goal_tolerance: 1.5
+      xy_goal_tolerance: 3.0
       trans_stopped_velocity: 0.02
       short_circuit_trajectory_evaluation: True
       stateful: True
@@ -176,8 +176,8 @@ local_costmap:
           max_obstacle_height: 2.0
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 3.0
-        inflation_radius: 1.0
+        cost_scaling_factor: 2.5
+        inflation_radius: 0.9
       always_send_full_costmap: True
 
 # GPS WPF CHANGE: Remove static layer
@@ -220,7 +220,7 @@ global_costmap:
           inf_is_valid: true
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 5.0
+        cost_scaling_factor: 4.5
         inflation_radius: 1.5
       always_send_full_costmap: True
 

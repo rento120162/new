@@ -52,6 +52,13 @@ def generate_launch_description():
             os.path.join(livox_path, "launch_ROS2", 'rviz_MID360_launch.py'))
     )
 
+    lidar_transform_node = Node(
+        package='g1_navigation',
+        executable='lidar_transformer',
+        name='lidar_transform',
+        output='screen'
+    )
+
     tf2_node = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
@@ -87,6 +94,7 @@ def generate_launch_description():
 
     ld = LaunchDescription()
     ld.add_action(livox_cmd)
+    ld.add_action(lidar_transform_node)
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_config_path_cmd)
     ld.add_action(declare_config_file_cmd)

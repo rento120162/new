@@ -110,7 +110,7 @@ private:
 
         // ←ここは環境依存（反転してるなら残す）
         pose.pose.position.x = -(res->map_point.y);
-        pose.pose.position.y = -(res->map_point.x);
+        pose.pose.position.y = (res->map_point.x);
         pose.pose.orientation.w = 1.0;
 
         map_wps_.push_back(pose);

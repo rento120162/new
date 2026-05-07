@@ -30,6 +30,7 @@ set (
   sensor_msgs
   geographic_msgs
   tf2_geometry_msgs
+  tf2
 )
 
 # find dependencies
@@ -44,6 +45,7 @@ find_package(rclcpp_action REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geographic_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(tf2 REQUIRED)
 
 add_executable(ros2serial src/ros2serial.cpp)
 ament_target_dependencies(ros2serial ${DEPENDENCY_LIST})
@@ -54,6 +56,12 @@ ament_target_dependencies(gps_waypoint_follower ${DEPENDENCY_LIST})
 add_executable(set_datum src/set_datum.cpp)
 ament_target_dependencies(set_datum ${DEPENDENCY_LIST})
 
+add_executable(gps_odom_filter src/gps_odom_filter.cpp)
+ament_target_dependencies(gps_odom_filter ${DEPENDENCY_LIST})
+
+add_executable(lidar_transformer src/lidar_transformer.cpp)
+ament_target_dependencies(lidar_transformer ${DEPENDENCY_LIST})
+
 target_link_libraries(gps_waypoint_follower
   yaml-cpp)
 
@@ -62,6 +70,8 @@ install(TARGETS
         ros2serial
         gps_waypoint_follower
         set_datum
+        gps_odom_filter
+        lidar_transformer
         DESTINATION lib/${PROJECT_NAME})
 
 install(

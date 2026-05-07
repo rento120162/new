@@ -47,6 +47,12 @@ def generate_launch_description():
 
     Node(
         package='g1_navigation',
+        executable='gps_odom_filter',
+        name='gps_odom_filter',
+    ),
+
+    Node(
+        package='g1_navigation',
         executable='ros2serial',
         name='emrgency_switch',
     ),
